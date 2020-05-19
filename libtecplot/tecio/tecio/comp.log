@@ -1,0 +1,73 @@
+Choose platform:
+ 
+  macux.104
+  macix64.105
+  sgix.62
+  sgix3.62
+  sgix.65
+  sgix64.65
+  sgix2.65
+  sun4.57
+  sun464.57
+  sun86.54
+  ibmx.43
+  ibmx64.43
+  ibmx.51
+  ibmx64.51
+  ibmx64.53
+  decalpha.32
+  compaq.51
+  hp7xx.11
+  hp7xx64.11
+  hpi64.11
+  linux.24
+  linuxi64.24
+  linux.22
+  linuxa.22
+  linuxg248x64.26
+  linuxg27x64.26
+  crayc90
+  osx
+->Choose:
+  1.  Make tecio.a only
+  2.  Make tecio.a and pltview
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c TranslatedString.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c alloc.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED -DMAKEARCHIVE -c arrlist.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c auxdata.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c dataio.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c dataio4.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c dataset.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c dataset0.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED -DMAKEARCHIVE -c datautil.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c filestream.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c geom2.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c q_msg.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c q_unicode.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c set.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c strlist.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c strutil.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED  -c tassert.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED -DMAKEARCHIVE -c tecxxx.cpp
+/Users/rahul/Research/Codes/Rocflu_May1616/Rocflu/libtecplot/tecio/tecio
+ar qv tecio.a  tecsrc/TranslatedString.o tecsrc/alloc.o tecsrc/arrlist.o tecsrc/auxdata.o tecsrc/dataio.o tecsrc/dataio4.o tecsrc/dataset.o tecsrc/dataset0.o tecsrc/datautil.o tecsrc/filestream.o tecsrc/geom2.o tecsrc/q_msg.o tecsrc/q_unicode.o tecsrc/set.o tecsrc/strlist.o tecsrc/strutil.o tecsrc/tassert.o tecsrc/tecxxx.o
+q - tecsrc/TranslatedString.o
+q - tecsrc/alloc.o
+q - tecsrc/arrlist.o
+q - tecsrc/auxdata.o
+q - tecsrc/dataio.o
+q - tecsrc/dataio4.o
+q - tecsrc/dataset.o
+q - tecsrc/dataset0.o
+q - tecsrc/datautil.o
+q - tecsrc/filestream.o
+q - tecsrc/geom2.o
+q - tecsrc/q_msg.o
+q - tecsrc/q_unicode.o
+q - tecsrc/set.o
+q - tecsrc/strlist.o
+q - tecsrc/strutil.o
+q - tecsrc/tassert.o
+q - tecsrc/tecxxx.o
+g++ -I./tecsrc -DMAKEARCHIVE -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED -c pltview.cpp
+g++ -arch x86_64 -DDARWIN -DLONGIS64 -I/usr/X11/include  -DUSEENUM -DTHREED pltview.o tecio.a -arch x86_64   -lm -o pltview

@@ -1,0 +1,38 @@
+################################################################################
+#
+# $Id: Filelist.txt,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+#
+# Purpose: Filelist for rfluclone utility.
+#
+# Description: None.
+#
+# Notes: None.
+#
+# Copyright: (c) 2007 by the University of Illinois
+#
+################################################################################
+
+SRCCXX+=	main.C
+
+SRCF90+=	BuildVersionString.F90\
+		RFLU_CheckClonability.F90\
+		RFLU_CloneCommLists.F90\
+		RFLU_CloneGrid.F90\
+		RFLU_PrintHeader.F90\
+		rfluclone.F90
+
+################################################################################
+#
+# RCS Revision history:
+#
+# $Log: Filelist.txt,v $
+# Revision 1.1.1.1  2015/01/23 22:57:50  tbanerjee
+# merged rocflu micro and macro
+#
+# Revision 1.1.1.1  2014/07/15 14:31:37  brollin
+# New Stable version
+#
+# Revision 1.1  2007/08/07 17:13:59  haselbac
+# Initial revision
+#
+################################################################################

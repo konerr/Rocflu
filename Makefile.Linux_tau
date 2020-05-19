@@ -1,0 +1,397 @@
+################################################################################
+#
+# $Id: Makefile.Linux_tau,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+#
+# Purpose: Linux-specific makefile
+#
+# Description: none
+#
+# Notes: MPI flags for turing (Myrinet) and laptop (with LAM)
+#
+# Copyright: (c) 2001-2005 by the University of Illinois
+#
+################################################################################
+
+AR= ar
+ARFLAGS= cru
+CPP=cpp
+LIBMET=
+LIBMPI=
+LIBSYS=
+LIBTEC=
+MODEXT=mod
+MODULES=*.$(MODEXT)
+MPIINC=
+
+### Machine-dependent settings ################################################
+
+MACHINE= $(shell uname -n)
+
+### Hipergator at UF ######################## 
+ifeq ($(findstring ufhpc,$(MACHINE)),ufhpc)
+  FC=tau_f90.sh
+  COMP=tau_f90.sh 
+  CXX=tau_cxx.sh
+  CXXFLAGS=
+  CXXOPT= 
+  LINKER=tau_cxx.sh
+
+  CXXLINKFLAGS += -L/usr/mpi/intel/openmpi-1.6/lib64 -lmpi_f90
+
+  FORTFLAGS= -DFORTRAN_UNDERSCORE -DFORTRAN_LOWERCASE
+
+  ifdef DEBUG
+    CMFLAGS=-g -C
+    LDFLAGS=-g -C
+  else
+    CMFLAGS=-O 
+    LDFLAGS=-O 
+  endif
+
+  ifdef PROF
+    CMFLAGS+=-pg
+    LDFLAGS+=-pg
+  endif 
+
+  LIBSYS=
+
+  ifdef ROCPROF
+    FPPFLAGS+= -DROCPROF
+    LIBSYS+= -L$(ROCPROF)/lib -lRocprof
+  endif
+
+  ifdef HYPRE
+    CXXLINKFLAGS+=  -I/home/mparmar/hypre/include -L/home/mparmar/hypre/lib -lHYPRE
+    MKLLIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_lapack -lmkl_core
+    CXXLINKFLAGS+=  -L/opt/intel/mkl/10.0.2.018/lib/em64t $(MKLLIBS)
+    CXXLINKFLAGS+=  -Wl,-rpath -Wl,/opt/intel/mkl/10.0.2.018/lib/em64t
+  endif
+
+  FPPFLAGS+=
+
+  TECHOME= ../../libtecplot/tecio
+  LIBTEC=$(TECHOME)/lib/tecio64.a
+
+  ifdef RFLUPOST
+    INCTEC=-I$(TECHOME)/include
+  endif
+
+  LIBMET = ../../libmetis/libmetis.a
+endif
+
+### Pattern rules ##############################################################
+%.o: %.f90
+ifeq ($(FC),f90)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-p%) -c $< -o $@
+endif
+ifeq ($(FC),ifc)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+endif
+ifeq ($(FC),ifort)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+endif
+ifeq ($(FC),mpif90)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+endif
+ifeq ($(FC),mpiifort)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+endif
+ifeq ($(FC),pathf95)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-module %) -c $< -o $@
+endif
+ifeq ($(FC),pgf90)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-module %) -c $< -o $@
+endif
+ifeq ($(FC),cmpif90c)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+endif
+#ifeq ($(FC),tau_f90.sh)
+	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+#endif
+ifeq ($(FC),mpxlf)
+%.o: %.F90
+	$(COMP) $(FPPFLAGS:-D%=-WF,-D%) $(CMFLAGS:-D%=-WF,-D%) \
+	$(MODDIR:%=-I%) -qsuffix=f=f90:cpp=F90 -qthreaded -c $< -o $@
+endif
+
+%.f90: %.F90
+	$(CPP) -C -P -traditional $(FPPFLAGS) $< $@
+%.o: %.f
+ifeq ($(FC),mpxlf)
+	$(FC) $(CMFLAGS:-D%=-WF,-D%) -qsuffix=f=f -qfixed -c $< -o $@
+else
+	$(COMP) $(CMFLAGS) -c $< -o $@
+endif
+%.o: %.C
+	$(CXX) $(CXXOPT) -I$(FLUIDHOME)/include $(INCTEC) $(FORTFLAGS) -c $< -o $@
+
+
+### Default action #############################################################
+all:
+
+################################################################################
+#
+# RCS Revision history:
+#
+# $Log: Makefile.Linux_tau,v $
+# Revision 1.1.1.1  2015/01/23 22:57:50  tbanerjee
+# merged rocflu micro and macro
+#
+# Revision 1.1  2014/07/21 15:56:37  tbanerjee
+# - Added a TAU version of the Makefile.
+#
+# Revision 1.5  2014/05/29 15:01:30  brollin
+# *** empty log message ***
+#
+# Revision 1.4  2014/05/21 16:44:12  tmish
+# - Removed .Precious command.
+#
+# Revision 1.3  2014/05/21 15:07:57  tmish
+# - Added setup for gator.
+#
+# Revision 1.96  2007/03/28 18:17:06  haselbac
+# Changed submit.local compiler from pathscale to intel
+#
+# Revision 1.95  2006/12/21 12:19:41  haselbac
+# Added -C flag to DEBUG section for hpc
+#
+# Revision 1.94  2006/12/18 02:30:24  haselbac
+# Enabled Tecplot on hpc
+#
+# Revision 1.93  2006/10/10 14:51:44  haselbac
+# Added support for Rocprof on hpc cluster at UF
+#
+# Revision 1.91  2006/05/08 18:24:20  fnajjar
+# Enforced linker to use proper mkl library
+#
+# Revision 1.90  2006/04/03 21:18:31  fnajjar
+# Updated compiler, mkl versions and paths to Metis and Tecplot for ALC
+#
+# Revision 1.89  2005/10/28 16:18:03  haselbac
+# Mike: Added support for BlueGeneL
+#
+# Revision 1.88  2005/09/21 18:46:15  haselbac
+# Changed TECHOME for alc because of new lib location
+#
+# Revision 1.87  2005/09/08 14:50:59  mtcampbe
+# Fixed profiling options for ALC.
+#
+# Revision 1.86  2005/08/26 18:12:58  haselbac
+# Modified opt settings, changes due to Adam Moody and Charles Shereda at LLNL
+#
+# Revision 1.85  2005/08/01 18:34:21  haselbac
+# Added PROFILER library link line
+#
+# Revision 1.84  2005/07/08 14:49:57  haselbac
+# Now use ALC LAPACK to eliminate code hanging
+#
+# Revision 1.83  2005/07/06 21:40:36  haselbac
+# Mike: Fixed ALC problems with runtime core dumps
+#
+# Revision 1.82  2005/06/19 04:28:21  wasistho
+# modified Makefile for tungsten
+#
+# Revision 1.81  2005/06/01 23:06:20  haselbac
+# Fixed linking on ALC for RFLU and RFLO
+#
+# Revision 1.80  2005/05/19 16:04:56  haselbac
+# Changed Tecplot linking problem workaround bcos of Frost
+#
+# Revision 1.79  2005/05/05 18:31:07  haselbac
+# Fixed problem where missing path to tecplot can break compilation
+#
+# Revision 1.78  2005/05/03 20:36:21  haselbac
+# Added workaround for TECPLOT linking conflict problem
+#
+# Revision 1.77  2005/05/03 13:29:51  haselbac
+# Fixed bug with linking on Absoft f90 and mpich machines: Resolved missing IARGC and GETARG symbols
+#
+# Revision 1.76  2005/05/03 03:02:10  haselbac
+# Changed to linking with C++
+#
+# Revision 1.75  2005/04/29 18:12:32  haselbac
+# Fixed tungsten section
+#
+# Revision 1.74  2005/04/15 15:05:44  haselbac
+# Removed Charm/FEM stuff
+#
+# Revision 1.73  2005/04/05 16:46:19  fnajjar
+# Added entry for NCSA tungsten
+#
+# Revision 1.72  2005/02/01 15:20:41  fnajjar
+# Added pattern rule to mpiifort for ALC compilation
+#
+# Revision 1.71  2005/01/27 22:08:14  haselbac
+# Added entry for cobalt, fixed problem with pattern rules
+#
+# Revision 1.70  2005/01/04 20:54:14  fnajjar
+# Corrected PROF and Optimization flags for ALC
+#
+# Revision 1.69  2004/12/29 21:00:32  haselbac
+# Added g2c to LIBSYS on popovich
+#
+# Revision 1.68  2004/12/22 20:36:46  fnajjar
+# Removed -Rb option from turing section since it breaks Absoft compiler
+#
+# Revision 1.67  2004/12/21 14:59:22  fnajjar
+# Added -Rb flag for debug option on Turing
+#
+# Revision 1.66  2004/12/08 15:31:24  fnajjar
+# Fixed problem with CHARM compilation and removed antiquated machine names
+#
+# Revision 1.65  2004/12/07 16:05:00  fnajjar
+# Fixed problems with Makefile due to ALC port
+#
+# Revision 1.64  2004/12/06 21:32:50  fnajjar
+# Updated for ALC and moved LIBSYS setup for individual machines
+#
+# Revision 1.63  2004/11/17 16:11:48  haselbac
+# Commented out g2c library for now
+#
+# Revision 1.62  2004/11/09 00:25:49  haselbac
+# Added METIS library to popovich and titov
+#
+# Revision 1.61  2004/06/18 15:50:42  haselbac
+# Enabled Tecplot on turing
+#
+# Revision 1.60  2004/06/17 15:08:26  haselbac
+# Disable TECPLOT for now, TEC10 wrappers not ready
+#
+# Revision 1.59  2004/06/16 20:00:09  haselbac
+# Changed to TEC10 for titov and popovich
+#
+# Revision 1.58  2004/05/04 21:02:10  haselbac
+# Changed paths for Tecplot 10 on titov and popovich
+#
+# Revision 1.57  2003/12/04 03:19:16  haselbac
+# Changed RIFFRAFF and added MODULES
+#
+# Revision 1.56  2003/07/18 20:02:54  haselbac
+# Changed path to tecplot library on popovich
+#
+# Revision 1.55  2003/07/03 21:48:43  jblazek
+# Implemented dual-time stepping.
+#
+# Revision 1.54  2003/04/11 15:15:18  jiao
+# Changed RFLU_CHARM back to CHARM.
+#
+# Revision 1.53  2003/03/24 23:24:08  jferry
+# added section for fahrenheit
+#
+# Revision 1.52  2003/03/22 00:28:52  haselbac
+# Removed -Y... for Turing, tecio and Charm modified
+#
+# Revision 1.51  2003/03/21 01:17:17  haselbac
+# New makefile structure - previous checkin got screwed up...
+#
+# Revision 1.41  2003/01/31 22:57:21  jiao
+# Moved MODDIR in build rules
+#
+# Revision 1.40  2003/01/31 22:19:50  jiao
+# Changed to add module paths in CMFLAGS instead of FPPFLAGS
+#
+# Revision 1.39  2003/01/31 22:11:03  jiao
+# Changed to compile modules in modfloflu to avoid duplication of object files.
+#
+# Revision 1.38  2003/01/28 23:11:50  haselbac
+# Deactivated special debugging flags
+#
+# Revision 1.37  2003/01/24 20:04:21  f-najjar
+# Included more stringent debugging flags -Rp -Rb
+#
+# Revision 1.36  2003/01/22 00:45:59  jblazek
+# Resolved problem with // on turing.
+#
+# Revision 1.35  2003/01/13 15:33:26  f-najjar
+# ReAdded PLAG_FROZENFLOW cpp flag
+#
+# Revision 1.34  2003/01/08 20:06:11  mtcampbe
+# Fixed for Absoft 8.0
+#
+# Revision 1.33  2003/01/02 16:30:23  haselbac
+# Added parts which were deleted because of bad check-in
+#
+# Revision 1.32  2002/12/27 22:07:13  jblazek
+# Splitted up RFLO_ModInterfaces and ModInterfaces.
+#
+# Revision 1.26  2002/10/14 22:33:32  jblazek
+# Removed -YEXT_SFX=_ -YEXT_NAMES=LCS flags for LAM (Linux PC).
+#
+# Revision 1.25  2002/10/12 21:31:18  haselbac
+# Changed CHARM to RFLU_CHARM
+#
+# Revision 1.24  2002/10/11 16:23:03  haselbac
+# Completed conversion from CHARM flag to RFLU_CHARM
+#
+# Revision 1.23  2002/10/11 16:15:50  haselbac
+# Adaptation for titov (now Linux)
+#
+# Revision 1.22  2002/10/07 17:08:32  olawlor
+# Changed "CHARM=1" make flag to "FLU_CHARM=1".
+#
+# This is needed because the rest of genx uses "CHARM=1"
+# to indicate that we're using AMPI; while here "CHARM=1"
+# means we're running Rocflu under the FEM framework.
+#
+# Revision 1.21  2002/10/01 22:40:06  jiao
+# Jiao: Fixed dependencies
+#
+# Revision 1.20  2002/09/27 02:21:06  jblazek
+# Modified include statement (turing complained for ModMPI).
+#
+# Revision 1.19  2002/09/27 00:57:07  jblazek
+# Changed makefiles - no makelinks needed.
+#
+# Revision 1.18  2002/09/20 22:22:32  jblazek
+# Finalized integration into GenX.
+#
+# Revision 1.17  2002/09/17 22:51:22  jferry
+# Removed Fast Eulerian particle type
+#
+# Revision 1.16  2002/09/05 17:40:18  jblazek
+# Variable global moved into regions().
+#
+# Revision 1.14  2002/07/25 15:27:41  haselbac
+# Added HACK_PERIODIC flag and debugging for CHARM
+#
+# Revision 1.13  2002/06/27 16:06:14  haselbac
+# Added CHECK_DATASTRUCT precompilation flag
+#
+# Revision 1.12  2002/06/17 13:42:35  haselbac
+# Added GENX precompilation flag to activate SOLVER_NAME
+#
+# Revision 1.11  2002/06/14 21:12:38  haselbac
+# Changed UNIFLOWPRES to CHECK_UNIFLOW
+#
+# Revision 1.10  2002/06/14 21:03:39  wasistho
+# Added STATS and CHECK_GRAD flags
+#
+# Revision 1.9  2002/05/28 13:37:45  haselbac
+# Added charmc and fixed B108 problem
+#
+# Revision 1.8  2002/05/04 17:19:37  haselbac
+# Added UNIFLOWPRES command-line flag
+#
+# Revision 1.7  2002/03/26 20:40:31  haselbac
+# Added sections for popovich to allow use of Tecplot
+#
+# Revision 1.6  2002/03/18 22:35:50  jblazek
+# Changed compilation options for postprocessing and LAM-MPI.
+#
+# Revision 1.5  2002/02/21 23:25:04  jblazek
+# Blocks renamed as regions.
+#
+# Revision 1.4  2002/01/12 00:02:48  jblazek
+# Added postprocessor.
+#
+# Revision 1.3  2002/01/02 16:20:17  jblazek
+# Added flow initialization and dummy cell geometry.
+#
+# Revision 1.2  2001/12/22 00:09:36  jblazek
+# Added routines to store grid and solution.
+#
+# Revision 1.1  2001/12/11 21:59:27  jblazek
+# memory allocation added.
+#
+################################################################################
+

@@ -1,0 +1,59 @@
+################################################################################
+#
+# $Id: Filelist.txt,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+#
+# Purpose: Filelist for rflupart utility.
+#
+# Description: None.
+#
+# Notes: None.
+#
+# Copyright: (c) 2005 by the University of Illinois
+#
+################################################################################
+
+SRCCXX+=	main.C
+
+SRCF90+=	RFLU_ModCENTAUR.F90\
+		RFLU_ModCOBALT.F90\
+		RFLU_ModGAMBIT.F90\
+		RFLU_ModMESH3D.F90\
+		RFLU_ModPartitionRegion.F90\
+		RFLU_ModPartitionRegionUtils.F90\
+		RFLU_ModOMG.F90\
+		RFLU_ModSTARCD.F90\
+		RFLU_ModVGRIDns.F90\
+		RFLU_PrintHeader.F90\
+		RFLU_ReadConvGridWrapper.F90\
+		RFLU_USER_EnforcePatchCoords.F90\
+		RFLU_WriteVersionString.F90\
+		BuildVersionString.F90\
+                rflupart.F90
+
+################################################################################
+#
+# RCS Revision history:
+#
+# $Log: Filelist.txt,v $
+# Revision 1.1.1.1  2015/01/23 22:57:50  tbanerjee
+# merged rocflu micro and macro
+#
+# Revision 1.1.1.1  2014/07/15 14:31:37  brollin
+# New Stable version
+#
+# Revision 1.3  2010/05/24 16:08:15  haselbac
+# Added entry for RFLU_ModOMG
+#
+# Revision 1.2  2008/02/09 23:02:55  haselbac
+# Added entry for RFLU_ModSTARCD.F90
+#
+# Revision 1.1  2007/04/09 18:56:52  haselbac
+# Initial revision after split from RocfloMP
+#
+# Revision 1.2  2005/05/03 03:11:15  haselbac
+# Added compilation of main.C, removed main.F90
+#
+# Revision 1.1  2005/04/15 15:09:04  haselbac
+# Initial revision
+#
+################################################################################

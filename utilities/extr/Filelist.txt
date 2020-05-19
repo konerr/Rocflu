@@ -1,0 +1,50 @@
+################################################################################
+#
+# $Id: Filelist.txt,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+#
+# Purpose: Filelist for rfluextr utility.
+#
+# Description: None.
+#
+# Notes: None.
+#
+# Copyright: (c) 2007 by the University of Illinois
+#
+################################################################################
+
+SRCCXX+=	main.C
+
+SRCF90+=	BuildVersionString.F90\
+		RFLU_AllocateMemoryXSect.F90\
+		RFLU_AllocateReadComputeVars.F90\
+		RFLU_AllocMemSolWrapper.F90\
+                RFLU_BuildStencilInterp.F90\
+                RFLU_ComputeBilinearInterpWghts.F90\
+		RFLU_DeallocateMemoryXSect.F90\
+                RFLU_DeallocateReadComputeVars.F90\
+		RFLU_DeallocMemSolWrapper.F90\
+		RFLU_DecideBuildGeometry.F90\
+		RFLU_DecideBuildStencilsWeights.F90\
+		RFLU_ExtractLineDataQuad2D.F90\
+		RFLU_PrintHeader.F90\
+		RFLU_WriteLineData.F90\
+		rfluextr.F90
+
+################################################################################
+#
+# RCS Revision history:
+#
+# $Log: Filelist.txt,v $
+# Revision 1.1.1.1  2015/01/23 22:57:50  tbanerjee
+# merged rocflu micro and macro
+#
+# Revision 1.1.1.1  2014/07/15 14:31:37  brollin
+# New Stable version
+#
+# Revision 1.2  2007/12/05 13:25:39  haselbac
+# Added entries for new files
+#
+# Revision 1.1  2007/11/27 13:17:26  haselbac
+# Initial revision
+#
+################################################################################
