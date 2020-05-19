@@ -1,0 +1,8 @@
+language: fortran
+
+sudo: required
+
+before_install:
+          - sudo apt-get install gfortran
+
+script: ./utilities/scripts/build.sh
