@@ -337,7 +337,7 @@ ifeq ($(FC),mpixlf90_r)
 	$(MODDIR:%=-I%) -qsuffix=f=f90:cpp=F90 -qthreaded -c $< -o $@
 endif
 %.f90: %.F90
-	$(CPP) -P -traditional $(FPPFLAGS) $< $@
+	$(CPP) -C -P -traditional $(FPPFLAGS) $< $@
 %.o: %.f
 ifeq ($(FC),mpixlf90_r)
 	$(FC) $(CMFLAGS:-D%=-WF,-D%) -qsuffix=f=f -qfixed -c $< -o $@
