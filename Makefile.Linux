@@ -275,6 +275,54 @@ ifeq ($(findstring cab,$(MACHINE)),cab)
 
 endif
 
+### Travis ########################
+ifeq ($(findstring travis,$(MACHINE)),travis)
+  FC=mpif90
+  COMP=mpif90
+  CXX=mpic++
+  CXXFLAGS=
+  CXXOPT=
+  LINKER=$(CXX)
+
+#  CXXLINKFLAGS += -L/usr/local/tools/openmpi-intel-1.6.5/lib -lmpi_f90
+#  CXXLINKFLAGS += -L/usr/local/tools/openmpi-intel-1.6.5/lib -lmpi_f90
+
+  FORTFLAGS= -DFORTRAN_UNDERSCORE -DFORTRAN_LOWERCASE
+#  LDFLAGS+=/usr/local/tools/ic-14.0.174
+
+  ifdef DEBUG
+    CMFLAGS=-g -C
+    LDFLAGS=-g -C
+  else
+    CMFLAGS=-O3
+    LDFLAGS=-O3
+  endif
+
+  ifdef PROF
+    CMFLAGS+=-pg
+    LDFLAGS+=-pg
+  endif
+
+  LIBSYS=
+
+  ifdef ROCPROF
+    FPPFLAGS+= -DROCPROF
+    LIBSYS+= -L$(ROCPROF)/lib -lRocprof
+  endif
+
+  FPPFLAGS+=
+
+  ifdef RFLUPOST
+    INCTEC=-I$(TECHOME)/include
+  endif
+
+  LIBMET = ../../libmetis/libmetis.a
+
+  TECHOME= ../../libtecplot/tecio
+  LIBTEC=$(TECHOME)/lib/tecio64.a
+
+endif
+
 ### Pattern rules ##############################################################
 %.o: %.f90
 ifeq ($(FC),mpif90)
