@@ -7,5 +7,7 @@ uname -n
 
 which mpif90
 which mpic++
+which gfortran
+which cpp
 
 make RFLU=1
