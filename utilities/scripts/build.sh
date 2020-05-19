@@ -1,5 +1,5 @@
 !#/bin/bash
 
 set -ev
-
-make
+uname -n
+make RFLU=1
