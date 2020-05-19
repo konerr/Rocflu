@@ -5,4 +5,9 @@ sudo: required
 before_install:
           - sudo apt-get install gfortran
 
+addons:
+  apt:
+      packages: 
+        - libopenmpi-dev
+
 script: ./utilities/scripts/build.sh
