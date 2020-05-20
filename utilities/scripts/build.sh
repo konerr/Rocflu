@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -v
+set -ev
 
 #uname -s
 #uname -n
@@ -29,8 +29,11 @@ else
 	make -j4 &> openmpi.make
 	make install &> openmpi.install
 	cd ..
-	ls openmpi/bin/
-	cp openmpi/bin/mpi* /usr/bin/
+	echo "After make"
+	ls $TRAVIS_BUILD_DIR/openmpi/bin/
+	echo "After ls"
+	cp $TRAVIS_BUILD_DIR/openmpi/bin/mpi* /usr/bin/
+	echo "After cp"
 fi
 
 # recommended by Travis CI documentation to unset these for MPI builds
