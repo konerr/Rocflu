@@ -7,7 +7,7 @@ sudo: true
 before_install:
   - sudo apt-get update
   - sudo apt-get install gfortran
-  - sudo apt-get install libmetis
+  - sudo apt-get install metis
     #  - ./utilities/scripts/build.sh
     #  - ./build.sh
 #          - sudo apt-get install gcc
