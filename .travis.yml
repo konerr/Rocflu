@@ -6,17 +6,17 @@ dist: trusty
 
 before_install:
   - sudo apt-get install gfortran
-#  - ./utilities/scripts/build.sh
+  - ./utilities/scripts/build.sh
 #          - sudo apt-get install gcc
-addons:
- apt:
-  packages: 
-   - libopenmpi-dev
+#addons:
+# apt:
+#  packages: 
+#   - libopenmpi-dev
 
 cache:
  directories:
   - openmpi
   - openmpi-2.0.1
 
-#script: ./build.sh
-script: make clean && make RFLU=1
+script: ./build.sh
+#script: make clean && make RFLU=1
