@@ -16,5 +16,5 @@ cache:
   - openmpi
   - openmpi-2.0.1
 
-script: ./build.sh
-#script: make clean && make RFLU=1
+#script: ./build.sh
+script: make clean && make RFLU=1
