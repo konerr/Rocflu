@@ -277,12 +277,12 @@ endif
 
 ### Travis ########################
 ifeq ($(findstring travis,$(MACHINE)),travis)
-#  FC=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
-#  COMP=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
-#  CXX=${TRAVIS_BUILD_DIR}/openmpi/bin/mpic++
-  FC=mpif90
-  COMP=mpif90
-  CXX=mpic++
+  FC=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
+  COMP=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
+  CXX=${TRAVIS_BUILD_DIR}/openmpi/bin/mpic++
+#  FC=mpif90
+#  COMP=mpif90
+#  CXX=mpic++
   CXXFLAGS=
   CXXOPT=
   LINKER=$(CXX)
