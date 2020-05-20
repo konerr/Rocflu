@@ -321,7 +321,7 @@ ifeq ($(findstring travis,$(MACHINE)),travis)
     INCTEC=-I$(TECHOME)/include
   endif
 
-  LIBMET = /usr/lib/libmetis.a
+  LIBMET = -L/usr/lib/x86_64-linux-gnu -lmetis #libmetis.a
 
   TECHOME= ../../libtecplot/tecio
   LIBTEC=$(TECHOME)/lib/tecio64.a
