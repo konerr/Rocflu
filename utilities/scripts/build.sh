@@ -36,5 +36,3 @@ test -n $CC && unset CC
 test -n $CXX && unset CXX
 test -n $FC && unset FC
 
-which mpif90
-which mpic++
