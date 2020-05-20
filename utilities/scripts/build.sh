@@ -12,7 +12,7 @@ set -ev
 
 #make RFLU=1
 
-if [ -f "openmpi/bin/mpirun" ] && [ -f "openmpi-2.0.1/config.log" ]; then
+if [ -f "openmpi-2.0.1/config.log" ]; then
 	echo "Using cached OpenMPI"
 	echo "Configuring OpenMPI"
 	cd openmpi-2.0.1
