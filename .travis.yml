@@ -3,8 +3,8 @@
 sudo: false
 
 before_install:
+  - sudo apt-get install gfortran
   - ./utilities/scripts/build.sh
-#          - sudo apt-get install gfortran
 #          - sudo apt-get install gcc
 #addons:
 #  apt:
