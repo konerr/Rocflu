@@ -2,6 +2,8 @@
 
 sudo: true
 
+dist: trusty
+
 before_install:
   - sudo apt-get install gfortran
 #  - ./utilities/scripts/build.sh
