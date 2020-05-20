@@ -1,14 +1,13 @@
 #!/bin/bash
 
-set -ev
+set -v
 
 #uname -s
 #uname -n
 #
-#which mpif90
-#which mpic++
-#which gfortran
-#which cpp
+which gfortran
+which gcc
+which g++
 
 #make RFLU=1
 
@@ -36,3 +35,6 @@ fi
 test -n $CC && unset CC
 test -n $CXX && unset CXX
 test -n $FC && unset FC
+
+which mpif90
+which mpic++

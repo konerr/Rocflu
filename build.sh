@@ -1,14 +1,14 @@
 #!/bin/bash
 
-set -ev
+set -v
 
 uname -s
 uname -n
 #
-which mpif90
-which mpic++
 which gfortran
 which cpp
+which mpif90
+which mpic++
 
 make clean
 echo 'Cleaning directory'
