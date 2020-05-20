@@ -5,6 +5,7 @@ sudo: true
 #dist: trusty
 
 before_install:
+  - sudo apt-get update
   - sudo apt-get install gfortran
   - sudo apt-get install libmetis
     #  - ./utilities/scripts/build.sh
