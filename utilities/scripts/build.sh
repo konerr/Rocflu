@@ -14,9 +14,9 @@ which g++
 if [ -f "openmpi/bin/mpirun" ] && [ -f "openmpi-2.0.1/config.log" ]; then
 	echo "Using cached OpenMPI"
 	echo "Configuring OpenMPI"
-	cd openmpi-2.0.1
-	./configure --prefix=$TRAVIS_BUILD_DIR/openmpi CC=gcc CXX=g++ FC=gfortran &> openmpi.configure
-	cd ..
+#	cd openmpi-2.0.1
+#	./configure --prefix=$TRAVIS_BUILD_DIR/openmpi CC=gcc CXX=g++ FC=gfortran &> openmpi.configure
+#	cd ..
 	echo `pwd`
 	echo `ls`
 else
@@ -41,3 +41,4 @@ test -n $FC && unset FC
 
 ls $TRAVIS_BUILD_DIR/openmpi/
 ls $TRAVIS_BUILD_DIR/openmpi/bin/
+ls $TRAVIS_BUILD_DIR/openmpi/lib/

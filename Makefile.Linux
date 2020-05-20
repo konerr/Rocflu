@@ -277,15 +277,17 @@ endif
 
 ### Travis ########################
 ifeq ($(findstring travis,$(MACHINE)),travis)
-  FC=mpif90
-  COMP=mpif90
-  CXX=mpic++
+  FC=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
+  COMP=${TRAVIS_BUILD_DIR}/openmpi/bin/mpif90
+  CXX=${TRAVIS_BUILD_DIR}/openmpi/bin/mpic++
   CXXFLAGS=
   CXXOPT=
   LINKER=$(CXX)
 
 #  CXXLINKFLAGS += -L/usr/local/tools/openmpi-intel-1.6.5/lib -lmpi_f90
 #  CXXLINKFLAGS += -L/usr/local/tools/openmpi-intel-1.6.5/lib -lmpi_f90
+  CXXLINKFLAGS += -L${TRAVIS_BUILD_DIR}/openmpi/lib -lmpi_f90 -lmpi -lmpi_mpifh -lmpi_cxx
+  CXXLINKFLAGS += -I${TRAVIS_BUILD_DIR}/openmpi/include -Wl
 
   FORTFLAGS= -DFORTRAN_UNDERSCORE -DFORTRAN_LOWERCASE
 #  LDFLAGS+=/usr/local/tools/ic-14.0.174
