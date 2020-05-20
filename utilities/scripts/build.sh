@@ -11,7 +11,7 @@ which g++
 
 #make RFLU=1
 
-if [ -f "openmpi-2.0.1/config.log" ]; then
+if [ -f "openmpi/bin/mpirun" ] && [ -f "openmpi-2.0.1/config.log" ]; then
 	echo "Using cached OpenMPI"
 	echo "Configuring OpenMPI"
 	cd openmpi-2.0.1
@@ -39,4 +39,5 @@ test -n $CC && unset CC
 test -n $CXX && unset CXX
 test -n $FC && unset FC
 
+ls $TRAVIS_BUILD_DIR/openmpi/
 ls $TRAVIS_BUILD_DIR/openmpi/bin/

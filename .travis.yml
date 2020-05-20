@@ -13,7 +13,8 @@ before_install:
 
 cache:
  directories:
+  - openmpi
   - openmpi-2.0.1
 
-script: ./build.sh
+    #script: ./build.sh
 #script: make clean && make RFLU=1
