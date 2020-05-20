@@ -29,6 +29,8 @@ else
 	make -j4 &> openmpi.make
 	make install &> openmpi.install
 	cd ..
+	ls openmpi/bin/
+	cp openmpi/bin/mpi* /usr/bin/
 fi
 
 # recommended by Travis CI documentation to unset these for MPI builds
