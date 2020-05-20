@@ -24,7 +24,9 @@ else
 	tar zxf openmpi-2.0.1.tar.gz
 	echo "Configuring and building OpenMPI"
 	cd openmpi-2.0.1
+	echo "In dir"
 	./configure --prefix=$TRAVIS_BUILD_DIR/openmpi CC=gcc CXX=g++ FC=gfortran &> openmpi.configure
+	echo "After configure"
 	make -j4 &> openmpi.make
 	make install &> openmpi.install
 	cd ..
