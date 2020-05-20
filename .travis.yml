@@ -1,6 +1,6 @@
 #language: fortran
 
-sudo: required
+sudo: false
 
 before_install:
   - ./utilities/scripts/build.sh
