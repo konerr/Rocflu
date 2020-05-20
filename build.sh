@@ -7,8 +7,8 @@ uname -n
 
 ls $TRAVIS_BUILD_DIR/openmpi/bin/
 echo "After ls"
-#sudo cp $TRAVIS_BUILD_DIR/openmpi/bin/mpi* /usr/bin/
-#echo "After cp"
+sudo cp $TRAVIS_BUILD_DIR/openmpi/bin/mpi* /usr/bin/
+echo "After cp"
 
 which gfortran
 which cpp
