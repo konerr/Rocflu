@@ -12,8 +12,8 @@ uname -n
 
 which gfortran
 which cpp
-which mpif90
-which mpic++
+#which mpif90
+#which mpic++
 
 make clean
 echo 'Cleaning directory'
