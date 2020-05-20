@@ -2,8 +2,8 @@
 
 set -ev
 
-#uname -s
-#uname -n
+uname -s
+uname -n
 #
 which mpif90
 which mpic++
