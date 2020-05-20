@@ -1,4 +1,4 @@
-!#/bin/bash
+#!/bin/bash
 
 set -ev
 
@@ -10,7 +10,7 @@ set -ev
 #which gfortran
 #which cpp
 
-make RFLU=1
+#make RFLU=1
 
 if [ -f "openmpi/bin/mpirun" ] && [ -f "openmpi-2.0.1/config.log" ]; then
 	echo "Using cached OpenMPI"
