@@ -11,7 +11,8 @@ uname -n
 #echo "After cp"
 
 ls /usr/
-ls /usr/lib/*metis*
+#ls /usr/lib/*metis*
+find /usr/ -name "*metis*" 
 
 which gfortran
 which cpp
