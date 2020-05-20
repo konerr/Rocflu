@@ -15,5 +15,5 @@ cache:
  directories:
   - openmpi-2.0.1
 
-#script: ./utilities/scripts/build.sh
-script: make clean && make RFLU=1
+script: ./build.sh
+#script: make clean && make RFLU=1
