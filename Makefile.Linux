@@ -322,11 +322,12 @@ ifeq ($(findstring travis,$(MACHINE)),travis)
   LIBTEC=$(TECHOME)/lib/tecio64.a
 
 endif
-
+$(info    ${FC} , ${COMP})
 ### Pattern rules ##############################################################
 %.o: %.F90
-#ifeq ($(FC),mpif90)
 	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
+#ifeq ($(FC),mpif90)
+#	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
 #endif
 ifeq ($(FC),tau_f90.sh)
 	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
