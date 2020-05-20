@@ -6,6 +6,7 @@ sudo: true
 
 before_install:
   - sudo apt-get install gfortran
+  - sudo apt-get install libmetis
     #  - ./utilities/scripts/build.sh
     #  - ./build.sh
 #          - sudo apt-get install gcc
@@ -20,4 +21,4 @@ cache:
   - openmpi-2.0.1
 
 #script: ./build.sh
-script: make clean && make RFLU=1
+script: make clean && make RFLU=1 NO_TECPLOT=1
