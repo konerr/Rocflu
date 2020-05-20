@@ -5,13 +5,13 @@ set -ev
 uname -s
 uname -n
 
-ls $TRAVIS_BUILD_DIR/openmpi/bin/mpi*
+#ls $TRAVIS_BUILD_DIR/openmpi/bin/mpi*
 #echo "After ls"
 #sudo cp $TRAVIS_BUILD_DIR/openmpi/bin/mpi* /usr/bin/
 #echo "After cp"
 
 ls /usr/
-ls /usr/lib/*mpi*
+ls /usr/lib/*metis*
 
 which gfortran
 which cpp
