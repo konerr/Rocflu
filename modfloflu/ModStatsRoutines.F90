@@ -1,0 +1,837 @@
+!*********************************************************************
+!* Illinois Open Source License                                      *
+!*                                                                   *
+!* University of Illinois/NCSA                                       * 
+!* Open Source License                                               *
+!*                                                                   *
+!* Copyright@2008, University of Illinois.  All rights reserved.     *
+!*                                                                   *
+!*  Developed by:                                                    *
+!*                                                                   *
+!*     Center for Simulation of Advanced Rockets                     *
+!*                                                                   *
+!*     University of Illinois                                        *
+!*                                                                   *
+!*     www.csar.uiuc.edu                                             *
+!*                                                                   *
+!* Permission is hereby granted, free of charge, to any person       *
+!* obtaining a copy of this software and associated documentation    *
+!* files (the "Software"), to deal with the Software without         *
+!* restriction, including without limitation the rights to use,      *
+!* copy, modify, merge, publish, distribute, sublicense, and/or      *
+!* sell copies of the Software, and to permit persons to whom the    *
+!* Software is furnished to do so, subject to the following          *
+!* conditions:                                                       *
+!*                                                                   *
+!*                                                                   *
+!* @ Redistributions of source code must retain the above copyright  * 
+!*   notice, this list of conditions and the following disclaimers.  *
+!*                                                                   * 
+!* @ Redistributions in binary form must reproduce the above         *
+!*   copyright notice, this list of conditions and the following     *
+!*   disclaimers in the documentation and/or other materials         *
+!*   provided with the distribution.                                 *
+!*                                                                   *
+!* @ Neither the names of the Center for Simulation of Advanced      *
+!*   Rockets, the University of Illinois, nor the names of its       *
+!*   contributors may be used to endorse or promote products derived * 
+!*   from this Software without specific prior written permission.   *
+!*                                                                   *
+!* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,   *
+!* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   *
+!* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          *
+!* NONINFRINGEMENT.  IN NO EVENT SHALL THE CONTRIBUTORS OR           *
+!* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER       * 
+!* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,   *
+!* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE    *
+!* USE OR OTHER DEALINGS WITH THE SOFTWARE.                          *
+!*********************************************************************
+!* Please acknowledge The University of Illinois Center for          *
+!* Simulation of Advanced Rockets in works and publications          *
+!* resulting from this software or its derivatives.                  *
+!*********************************************************************
+! ******************************************************************************
+!
+! Purpose: Suite of statistics routines.
+!
+! Description: None.
+!
+! Notes: None.
+!
+! ******************************************************************************
+!
+! $Id: ModStatsRoutines.F90,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+!
+! Copyright: (c) 2004 by the University of Illinois
+!
+! ******************************************************************************
+
+MODULE ModStatsRoutines
+
+  USE ModGlobal, ONLY: t_global 
+  USE ModParameters
+  USE ModDataTypes
+  USE ModError
+  USE ModDataStruct, ONLY: t_region  
+  USE ModGrid, ONLY: t_grid
+  USE ModMPI
+
+#ifdef PLAG
+  USE PLAG_ModEulerian, ONLY : PLAG_CalcEulerianField
+#endif
+ 
+  IMPLICIT NONE
+
+  PRIVATE
+  PUBLIC :: StatBuildVersionString, &
+            GetStatistics, &
+            InitStatistics, &
+            StatDataAccumulation1, &
+            StatDataAccumulation2, &
+            StatDataSampling, &
+            StatMapping, &
+            StatTimeAccumulation, &
+            StatWriteMP
+        
+! ******************************************************************************
+! Declarations and definitions
+! ****************************************************************************** 
+   
+  CHARACTER(CHRLEN) :: RCSIdentString = & 
+    '$RCSfile: ModStatsRoutines.F90,v $ $Revision: 1.1.1.1 $'        
+             
+! ******************************************************************************
+! Routines
+! ******************************************************************************
+
+  CONTAINS
+  
+!******************************************************************************
+!
+! Purpose: Build version string for printing in header.
+!
+! Description: none.
+!
+! Input: none.
+!
+! Output: 
+!   versionString = string containing version number and date.
+!
+! Notes: 
+!   1. The strings are NOT to be edited by anyone except the developer of 
+!      this physical module. 
+!
+!******************************************************************************
+
+SUBROUTINE StatBuildVersionString( versionString )
+
+  IMPLICIT NONE
+
+! ... parameters
+  CHARACTER(*) :: versionString
+
+! ... local variables
+  CHARACTER(LEN=2)  :: major, minor, patch
+  CHARACTER(CHRLEN) :: date
+
+!******************************************************************************
+! set strings: DO NOT EDIT UNLESS YOU ARE STATS DEVELOPER
+
+  major = '1'
+  minor = '0'
+  patch = '0'
+
+  date  = '11/30/04'
+
+! write into string
+
+  WRITE(versionString,'(A)') TRIM(major)//'.'//TRIM(minor)//'.'//TRIM(patch)
+  WRITE(versionString,'(A)') 'Version: '//TRIM(versionString)
+  WRITE(versionString,'(A)') TRIM(versionString)//', Date: '//TRIM(date)
+
+END SUBROUTINE StatBuildVersionString
+
+!******************************************************************************
+!
+! Purpose: calling data sampling routines for time averaged statistics
+!
+! Description: data sampling for time averaged statistics of gas mixture 
+!              and other physical module if desired; in addition
+!              averaging time interval is integrated
+!
+! Input: regions = data of all regions
+!
+! Output: StatDataSampling and StatTimeAccumulation called
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE GetStatistics( regions )
+
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_region), POINTER :: regions(:)
+
+! ... loop variables
+  INTEGER :: iReg
+
+! ... local variables
+  TYPE(t_global), POINTER :: global
+
+#ifdef PLAG
+    TYPE(t_region), POINTER :: pRegion
+#endif
+
+!******************************************************************************
+
+  global => regions(1)%global
+
+  CALL RegisterFunction( global,'GetStatistics',__FILE__ )
+
+! perform data sampling --------------------------------------------------------
+
+  IF (global%doStat == ACTIVE) THEN
+    DO iReg=1,global%nRegionsLocal
+        IF (global%mixtNStat>0) CALL StatDataSampling( regions(iReg),FTYPE_MIXT )
+#ifdef PLAG
+        IF ( global%plagUsed .EQV. .TRUE. ) THEN
+          pRegion => regions(iReg)
+
+          CALL PLAG_CalcEulerianField( pRegion )
+          IF ( global%plagNStat>0 ) & 
+            CALL StatDataSampling( regions(iReg),FTYPE_PLAG ) 
+        ENDIF ! plagUsed
+#endif
+    ENDDO
+    CALL StatTimeAccumulation( global ) 
+  ENDIF
+
+! finalize --------------------------------------------------------------------
+
+  CALL DeregisterFunction( global )
+
+END SUBROUTINE GetStatistics
+
+!******************************************************************************
+!
+! Purpose: initiation of time averaged statistics
+!
+! Description: initiation proceeds for gas mixture and other physical 
+!              module if desired; it is initiated by zero for new
+!              time averaging and by old values for restarting from 
+!              the previous process
+!
+! Input: regions = data of all regions
+!
+! Output: regions%levels%mixt%tav = time averaged mixture variables
+!         regions%levels%turb%tav = time averaged TURB variables
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE InitStatistics( regions )
+
+  USE ModInterfaces, ONLY : RFLU_ReadStat
+#ifdef GENX
+  USE STAT_RFLU_ModGenxAdmin, ONLY : STAT_RFLU_GenxGetData
+#endif
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_region), POINTER :: regions(:)
+
+! ... loop variables
+  INTEGER :: iReg
+
+! ... local variables
+  INTEGER :: iLev
+
+  TYPE(t_global), POINTER :: global
+  TYPE(t_region), POINTER :: pRegion
+
+!******************************************************************************
+
+  global => regions(1)%global
+
+  CALL RegisterFunction( global,'InitStatistics',__FILE__ )
+
+! check if the flow is unsteady -----------------------------------------------
+
+  IF (global%flowType == FLOW_STEADY)  THEN
+    global%doStat = OFF 
+  ENDIF
+
+! initialization of time averaging statistics ---------------------------------
+
+  global%statBc = 0
+
+  IF (global%doStat == ACTIVE) THEN
+
+! - restart from previous statistics
+
+    IF (global%reStat == ACTIVE) THEN
+
+      IF (global%myProcid==MASTERPROC .AND. global%verbLevel/=VERBOSE_NONE)  &
+        WRITE(STDOUT,'(A)') SOLVER_NAME//' Restart statistics ...'
+#ifndef GENX
+      DO iReg=1,global%nRegionsLocal
+        CALL RFLU_ReadStat( regions(iReg) )
+      ENDDO
+#else
+      DO iReg=1,global%nRegionsLocal
+        pRegion => regions(iReg)
+        CALL STAT_RFLU_GenxGetData( pRegion )
+      ENDDO
+#endif
+
+! - initialize new statistics
+
+    ELSE
+
+      IF (global%myProcid==MASTERPROC .AND. global%verbLevel/=VERBOSE_NONE)  &
+        WRITE(STDOUT,'(A)') SOLVER_NAME//' Start new statistics ...'
+      global%integrTime = 0._RFREAL      
+      DO iReg=1,global%nRegionsLocal
+        IF (global%mixtNStat > 0) THEN
+          regions(iReg)%mixt%tav =  0._RFREAL
+        ENDIF
+#ifdef PLAG
+        IF ((global%plagUsed .EQV. .TRUE.) .AND. &
+            (global%plagNStat > 0)) THEN
+          regions(iReg)%plag%tav = 0._RFREAL
+        ENDIF
+#endif
+      ENDDO       ! iReg
+
+    ENDIF
+  ENDIF
+
+! finalize --------------------------------------------------------------------
+
+  CALL DeregisterFunction( global )
+
+END SUBROUTINE InitStatistics
+
+!******************************************************************************
+!
+! Purpose: accumulate selected instantaneous quantities in time
+!
+! Description: this file containes two routines:
+!              1st routine, StatDataAccumulation1, for first moment variables
+!              2nd routine, StatDataAccumulation2, for second moment variables
+!
+! Input 1st routine:    ijkbeg, ijkend = begin and end cell indices
+!                       id             = index of variable var
+!                       idtav          = index of time-accumulated quantity
+!                       dTime          = time step
+!                       var            = variable to be time accumulated
+!                      
+! Input 2nd routine:    ijkbeg, ijkend = begin and end cell indices
+!                       id1            = index of first component variable
+!                       id2            = index of second component variable
+!                       idtav          = index of time-accumulated quantity
+!                       dTime          = time step
+!                       var1           = 1st component of 2nd moment variable
+!                       var2           = 2nd component of 2nd moment variable 
+!                      
+! Output of 1st and 2nd routine: qavg = quantity accumulated in time
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE StatDataAccumulation1( ijkbeg,ijkend,id,idtav,dTime,var,qavg )
+
+  IMPLICIT NONE
+
+! ... parameters
+  INTEGER               :: ijkbeg, ijkend, id, idtav
+  REAL(RFREAL)          :: dTime
+  REAL(RFREAL), POINTER :: var(:,:), qavg(:,:)
+
+! ... loop variables
+  INTEGER :: ijk
+
+!******************************************************************************
+
+  DO ijk=ijkbeg,ijkend
+    qavg(idtav,ijk) = qavg(idtav,ijk) + dTime*var(id,ijk)
+  ENDDO
+
+END SUBROUTINE StatDataAccumulation1
+
+! #############################################################################
+
+SUBROUTINE StatDataAccumulation2( ijkbeg,ijkend,id1,id2,idtav, &
+                                  dTime,var1,var2,qavg )
+
+  IMPLICIT NONE
+
+! ... parameters
+  INTEGER               :: ijkbeg, ijkend, id1, id2, idtav
+  REAL(RFREAL)          :: dTime
+  REAL(RFREAL), POINTER :: var1(:,:), var2(:,:), qavg(:,:)
+
+! ... loop variables
+  INTEGER :: ijk
+
+!******************************************************************************
+
+  DO ijk=ijkbeg,ijkend
+    qavg(idtav,ijk) = qavg(idtav,ijk) + dTime*var1(id1,ijk)*var2(id2,ijk)
+  ENDDO
+
+END SUBROUTINE StatDataAccumulation2
+
+!******************************************************************************
+!
+! Purpose: sorting variables to be time averaged
+!
+! Description: sorting procedure based on selection taken by user 
+!              stored in statId and mapped into statCode.
+!
+! Input: region              = data of current region
+!        fluidType           = mixture, turb, plag, etc        
+!        cv, dv, tv, gv      = variables to be time averaged
+!        statCode            = mapping identifiers
+!   
+! Output: tav  = quantities accumulated in time
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE StatDataSampling( region,fluidType )
+
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_region) :: region
+  INTEGER        :: fluidType
+
+! ... loop variables
+  INTEGER :: l
+
+! ... local variables
+  INTEGER :: iLev, iOff, ijOff
+  INTEGER :: idcbeg, jdcbeg, kdcbeg, idcend, jdcend, kdcend, ijkbeg, ijkend
+  INTEGER :: nStat, id1, id2
+  INTEGER, POINTER      :: statCode(:,:,:)
+
+  REAL(RFREAL), POINTER :: cv(:,:),dv(:,:),tv(:,:),gv(:,:),ev(:,:),tav(:,:)
+  REAL(RFREAL), POINTER :: sv(:,:),st(:,:)
+  REAL(RFREAL), POINTER :: var1(:,:),var2(:,:) 
+
+!******************************************************************************
+
+  CALL RegisterFunction( region%global,'StatDataSampling',__FILE__ )
+
+! get dimensions and pointers -------------------------------------------------
+
+  IF (fluidType == FTYPE_MIXT) THEN
+    nStat = region%global%mixtNStat
+    statCode => region%global%mixtStatCode
+    cv    => region%mixt%cv
+    dv    => region%mixt%dv
+    tv    => region%mixt%tv
+    gv    => region%mixt%gv
+    tav   => region%mixt%tav
+  ELSEIF (fluidType == FTYPE_PLAG) THEN
+#ifdef PLAG
+    nStat = region%global%plagNStat
+    statCode => region%global%plagStatCode
+    ev    => region%plag%ev
+    tav   => region%plag%tav
+#endif
+  ENDIF
+
+  ijkbeg = 1
+  ijkend = region%grid%nCells
+
+! Quantities to be time-averaged is determined from the index selected by user.
+! Data accumulation proceeds afterwards for each quantity.
+
+  DO l=1,nStat
+
+    IF ((statCode(1,1,l)==STAT_NONE).AND.(statCode(2,1,l)==STAT_NONE)) &
+    GOTO 999
+
+    IF (statCode(1,1,l)==STAT_CV) THEN
+      var1 => cv
+    ELSEIF (statCode(1,1,l)==STAT_DV) THEN
+      var1 => dv
+    ELSEIF (statCode(1,1,l)==STAT_TV) THEN
+      var1 => tv
+    ELSEIF (statCode(1,1,l)==STAT_GV) THEN
+      var1 => gv
+    ELSEIF (statCode(1,1,l)==STAT_SV) THEN
+      var1 => sv
+    ELSEIF (statCode(1,1,l)==STAT_ST) THEN
+      var1 => st
+    ELSEIF (statCode(1,1,l)==STAT_PLAGEV) THEN
+      var1 => ev
+    ENDIF
+
+    IF (statCode(2,1,l)==STAT_CV) THEN
+      var2 => cv
+    ELSEIF (statCode(2,1,l)==STAT_DV) THEN
+      var2 => dv
+    ELSEIF (statCode(2,1,l)==STAT_TV) THEN
+      var2 => tv
+    ELSEIF (statCode(2,1,l)==STAT_GV) THEN
+      var2 => gv
+    ELSEIF (statCode(2,1,l)==STAT_SV) THEN
+      var2 => sv
+    ELSEIF (statCode(2,1,l)==STAT_ST) THEN
+      var2 => st
+    ELSEIF (statCode(2,1,l)==STAT_PLAGEV) THEN
+      var2 => ev
+    ENDIF
+
+    id1 = statCode(1,2,l)
+    id2 = statCode(2,2,l)
+
+    IF (statCode(1,1,l)==STAT_NONE) THEN
+      CALL StatDataAccumulation1( ijkbeg,ijkend,id2,l, &
+                                  region%global%dtMin,var2,tav )
+    ELSEIF (statCode(2,1,l)==STAT_NONE) THEN
+      CALL StatDataAccumulation1( ijkbeg,ijkend,id1,l, &
+                                  region%global%dtMin,var1,tav )
+    ELSE
+      CALL StatDataAccumulation2( ijkbeg,ijkend,id1,id2,l, &
+                                  region%global%dtMin,var1,var2,tav )
+    ENDIF
+
+  ENDDO
+
+! finalize --------------------------------------------------------------------
+
+999 CONTINUE
+
+  CALL DeregisterFunction( region%global )
+
+END SUBROUTINE StatDataSampling
+
+!******************************************************************************
+!
+! Purpose: mapping from mixture and physical module ID to statistics ID
+!
+! Description: mapping based on parameter mixtStatId, turbStatId, etc 
+!              input by user
+!
+! Input: global%mixtStatId : mixture statistics ID from user input
+!        global%turbStatId : TURB statistics ID from user input
+!
+! Output: global%mixtStatCode : mapped mixture statistics ID
+!         global%turbStatCode : mapped TURB statistics ID
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE StatMapping( global )
+
+#ifdef GENX
+  USE ModInterfacesStatistics, ONLY : GenxStatNaming
+#endif
+#ifdef PLAG
+  USE ModInterfacesLagrangian, ONLY : PLAG_StatMapping
+#endif
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_global), POINTER :: global
+
+! ... loop variables
+  INTEGER  :: l, n
+
+! ... local variables
+#ifdef GENX
+  CHARACTER(CHRLEN), POINTER :: statName(:,:,:)
+#endif
+  INTEGER :: errorFlag
+  INTEGER, POINTER  :: statId(:,:), statCode(:,:,:)
+
+!******************************************************************************
+
+  CALL RegisterFunction( global,'StatMapping',__FILE__ )
+
+! allocate mixture variables and set pointers ---------------------------------
+
+  IF (global%mixtNStat <= 0) GOTO 111
+
+  ALLOCATE( global%mixtStatCode(2,2,global%mixtNStat),stat=errorFlag )
+  global%error = errorFlag
+  IF (global%error /= 0) CALL ErrorStop( global,ERR_ALLOCATE,__LINE__ )
+
+  statId   => global%mixtStatId
+  statCode => global%mixtStatCode
+
+#ifdef GENX
+  ALLOCATE( global%mixtStatNm(2,2,global%mixtNStat),stat=errorFlag )
+  global%error = errorFlag
+  IF (global%error /= 0) CALL ErrorStop( global,ERR_ALLOCATE,__LINE__ )
+
+  statName => global%mixtStatNm
+#endif
+
+! set mixture mapping ---------------------------------------------------------
+
+  DO l=1,global%mixtNStat
+    DO n=1,2
+      IF (statId(n,l)==0) THEN 
+        statCode(n,:,l) = STAT_NONE
+      ELSE IF (statId(n,l)==1) THEN 
+        statCode(n,1,l) = STAT_CV
+        statCode(n,2,l) = CV_MIXT_DENS
+#ifdef GENX
+        statName(n,1,l) = 'rho'
+        statName(n,2,l) = 'kg/m^3'
+#endif
+      ELSE IF (statId(n,l)==2) THEN 
+        statCode(n,1,l) = STAT_CV
+        statCode(n,2,l) = CV_MIXT_XVEL
+#ifdef GENX
+        statName(n,1,l) = 'u'
+        statName(n,2,l) = 'm/s'
+#endif
+      ELSE IF (statId(n,l)==3) THEN 
+        statCode(n,1,l) = STAT_CV 
+        statCode(n,2,l) = CV_MIXT_YVEL 
+#ifdef GENX
+        statName(n,1,l) = 'v'
+        statName(n,2,l) = 'm/s'
+#endif
+      ELSE IF (statId(n,l)==4) THEN 
+        statCode(n,1,l) = STAT_CV 
+        statCode(n,2,l) = CV_MIXT_ZVEL 
+#ifdef GENX
+        statName(n,1,l) = 'w'
+        statName(n,2,l) = 'm/s'
+#endif
+      ELSE IF (statId(n,l)==5) THEN 
+        statCode(n,1,l) = STAT_DV
+        statCode(n,2,l) = DV_MIXT_TEMP
+#ifdef GENX
+        statName(n,1,l) = 'T'
+        statName(n,2,l) = 'K'
+#endif
+      ELSE IF (statId(n,l)==6) THEN 
+        statCode(n,1,l) = STAT_DV
+        statCode(n,2,l) = DV_MIXT_PRES
+#ifdef GENX
+        statName(n,1,l) = 'p'
+        statName(n,2,l) = 'N/m^2'
+#endif
+      ELSE IF (statId(n,l)==7) THEN 
+        statCode(n,1,l) = STAT_DV
+        statCode(n,2,l) = DV_MIXT_SOUN
+#ifdef GENX
+        statName(n,1,l) = 'c'
+        statName(n,2,l) = 'm/s'
+#endif
+      ELSE IF (statId(n,l)==8) THEN 
+        statCode(n,1,l) = STAT_TV
+        statCode(n,2,l) = TV_MIXT_MUEL
+#ifdef GENX
+        statName(n,1,l) = 'mul'
+        statName(n,2,l) = 'kg/ms'
+#endif
+      ELSE IF (statId(n,l)==9) THEN 
+        statCode(n,1,l) = STAT_TV
+        statCode(n,2,l) = TV_MIXT_TCOL
+#ifdef GENX
+        statName(n,1,l) = 'tcol'
+        statName(n,2,l) = 'kg m/Ks^3'
+#endif
+      ELSE
+        CALL ErrorStop( global,ERR_STATS_INDEXING,__LINE__, &
+                        'mixture index out of range.' ) 
+      ENDIF
+    ENDDO
+  ENDDO
+
+#ifdef GENX
+! defined names and units of mixture statistics
+
+  CALL GenxStatNaming( global, FTYPE_MIXT )
+#endif
+
+111 CONTINUE
+
+#ifdef PLAG
+! allocate PLAG variables and set pointers ---------------------------------
+
+  IF (global%plagNStat <= 0) GOTO 333
+
+! set PLAG mapping ---------------------------------------------------------
+
+  CALL PLAG_StatMapping( global )
+
+333 CONTINUE
+#endif
+
+! finalize --------------------------------------------------------------------
+
+  CALL DeregisterFunction( global )
+
+END SUBROUTINE StatMapping
+
+!******************************************************************************
+!
+! Purpose: accumulation of time during time averaging process
+!
+! Description: time integration proceeds from STARTTIME to MAXTIME set by user
+!              if statistics RESTART (global%reStat) active, the process is
+!              continuation from previous process
+!
+! Input: global%dtMin = global minimum time advancement.
+!
+! Output: global%integrTime = accumulated time.
+!
+! Notes: none.
+!
+!******************************************************************************
+
+SUBROUTINE StatTimeAccumulation( global )
+
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_global), POINTER :: global
+
+! ... local variables
+
+!******************************************************************************
+
+  CALL RegisterFunction( global,'StatTimeAccumulation',__FILE__ )
+
+! accumulate time steps used in time-weighted averaging process
+
+  global%integrTime = global%integrTime + global%dtMin
+
+! finalize --------------------------------------------------------------------
+
+  CALL DeregisterFunction( global )
+
+END SUBROUTINE StatTimeAccumulation
+
+!******************************************************************************
+!
+! Purpose: update bc and write time averaged solution for all active physical 
+!          modules
+!
+! Description: none.
+!
+! Input: regions = tav of all physical modules in all regions 
+!
+! Output: to file
+!
+! Notes: none.
+!
+!******************************************************************************
+!
+! $Id: ModStatsRoutines.F90,v 1.1.1.1 2015/01/23 22:57:50 tbanerjee Exp $
+!
+! Copyright: (c) 2001 by the University of Illinois
+!
+!******************************************************************************
+
+SUBROUTINE StatWriteMP( regions )
+
+  USE ModDataTypes
+  USE ModDataStruct, ONLY : t_region
+  USE ModGlobal, ONLY     : t_global
+  USE ModError
+  USE ModParameters
+  IMPLICIT NONE
+
+! ... parameters
+  TYPE(t_region), POINTER :: regions(:)
+
+! ... loop variables
+
+! ... local variables
+
+  TYPE(t_global), POINTER :: global
+
+!******************************************************************************
+
+  global => regions(1)%global
+
+  CALL RegisterFunction( global,'StatWriteMP',__FILE__ )
+
+! start -----------------------------------------------------------------------
+
+
+! finalize --------------------------------------------------------------------
+
+  CALL DeregisterFunction( global )
+
+END SUBROUTINE StatWriteMP
+
+! ******************************************************************************
+! End
+! ******************************************************************************
+  
+END MODULE ModStatsRoutines
+
+! ******************************************************************************
+!
+! RCS Revision history:
+!
+! $Log: ModStatsRoutines.F90,v $
+! Revision 1.1.1.1  2015/01/23 22:57:50  tbanerjee
+! merged rocflu micro and macro
+!
+! Revision 1.1.1.1  2014/07/15 14:31:37  brollin
+! New Stable version
+!
+! Revision 1.3  2008/12/06 08:43:38  mtcampbe
+! Updated license.
+!
+! Revision 1.2  2008/11/19 22:16:52  mtcampbe
+! Added Illinois Open Source License/Copyright
+!
+! Revision 1.1  2007/04/09 18:49:11  haselbac
+! Initial revision after split from RocfloMP
+!
+! Revision 1.1  2007/04/09 18:00:17  haselbac
+! Initial revision after split from RocfloMP
+!
+! Revision 1.9  2006/01/10 05:02:34  wasistho
+! Get statistics Genx data in RFLU
+!
+! Revision 1.8  2005/12/20 20:42:39  wasistho
+! added ifdef RFLO around kernel using global%Nijk
+!
+! Revision 1.7  2005/12/01 09:00:10  wasistho
+! sanity check stats Id with inlet turbulence
+!
+! Revision 1.6  2005/06/16 03:52:18  wasistho
+! activated RFLO_ModStatsBc
+!
+! Revision 1.5  2005/05/21 07:07:50  wasistho
+! backout RFLO_ModStatsBoundaryConditions temporarily
+!
+! Revision 1.4  2005/05/21 01:42:47  wasistho
+! added statWriteMP
+!
+! Revision 1.3  2005/01/11 01:28:33  wasistho
+! fixed bugs, PLAG data sampling was outside regions loop
+!
+! Revision 1.2  2005/01/08 20:36:44  fnajjar
+! Added statistics infrastructure for PLAG and activated datastructure appropriately
+!
+! Revision 1.1  2004/12/29 23:28:21  wasistho
+! moved ModStatisticsRoutines from libfloflu to modfloflu
+!
+! Revision 1.1  2004/12/28 20:30:00  wasistho
+! moved statistics routines into module ModStatsRoutines
+!
+!
+! ******************************************************************************
+
