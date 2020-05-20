@@ -16,6 +16,9 @@ if [ -f "openmpi-2.0.1/config.log" ]; then
 	echo "Configuring OpenMPI"
 	cd openmpi-2.0.1
 	./configure --prefix=$TRAVIS_BUILD_DIR/openmpi CC=gcc CXX=g++ FC=gfortran &> openmpi.configure
+	cd ..
+	echo `pwd`
+	echo `ls`
 else
 # install OpenMPI from source
 	echo "Downloading OpenMPI Source"
@@ -36,3 +39,4 @@ test -n $CC && unset CC
 test -n $CXX && unset CXX
 test -n $FC && unset FC
 
+ls $TRAVIS_BUILD_DIR/openmpi/bin/
