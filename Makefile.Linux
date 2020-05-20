@@ -324,7 +324,7 @@ ifeq ($(findstring travis,$(MACHINE)),travis)
 endif
 
 ### Pattern rules ##############################################################
-%.o: %.F90
+%.o: %.f90
 ifeq ($(FC),mpif90)
 	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@
 endif

@@ -11,4 +11,5 @@ addons:
       packages: 
         - libopenmpi-dev
 
-script: ./utilities/scripts/build.sh
+#script: ./utilities/scripts/build.sh
+script: make RFLU=1
