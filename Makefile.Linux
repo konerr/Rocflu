@@ -322,7 +322,7 @@ ifeq ($(findstring travis,$(MACHINE)),travis)
   LIBTEC=$(TECHOME)/lib/tecio64.a
 
 endif
-$(info    ${FC} , ${COMP})
+
 ### Pattern rules ##############################################################
 %.o: %.F90
 	$(COMP) $(FPPFLAGS) $(CMFLAGS) $(MODDIR:%=-I%) -c $< -o $@

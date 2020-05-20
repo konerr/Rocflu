@@ -3,13 +3,17 @@
 sudo: required
 
 before_install:
-          - sudo apt-get install gfortran
-          - sudo apt-get install gcc
+  - ./utilities/scripts/build.sh
+#          - sudo apt-get install gfortran
+#          - sudo apt-get install gcc
+#addons:
+#  apt:
+#      packages: 
+#        - libopenmpi-dev
 
-addons:
-  apt:
-      packages: 
-        - libopenmpi-dev
+cache:
+ directories:
+  - openmpi-2.0.1
 
 #script: ./utilities/scripts/build.sh
-script: make clean #&& make RFLU=1
+script: make clean && make RFLU=1
