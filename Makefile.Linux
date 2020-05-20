@@ -288,7 +288,7 @@ ifeq ($(findstring travis,$(MACHINE)),travis)
   LINKER=$(CXX)
 
   CXXLINKFLAGS += -L${TRAVIS_BUILD_DIR}/openmpi/lib -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi -lmpi_mpifh -lmpi_cxx
-  CXXLINKFLAGS += -I${TRAVIS_BUILD_DIR}/openmpi/include -Wl
+  CXXLINKFLAGS += -I${TRAVIS_BUILD_DIR}/openmpi/include
 #  CXXLINKFLAGS += -L/lib -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi -lmpi_mpifh -lmpi_cxx
 #  CXXLINKFLAGS += -I/include -Wl
 
