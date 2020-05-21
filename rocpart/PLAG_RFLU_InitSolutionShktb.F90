@@ -83,7 +83,7 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
   USE ModMPI
   USE ModPartLag, ONLY: t_plag
   USE ModParameters  
-  USE ModRandom, ONLY: Rand1Uniform
+  USE ModRandom, ONLY: Rand1Uniform,Rand1Normal
   
   USE PLAG_ModParameters    
 
@@ -100,7 +100,7 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
 
   INTERFACE
     SUBROUTINE CurtainProfile(xs,xmid,phi)
-      REAL(RFREAL), CurtainProfile
+      INTEGER, PARAMETER :: RFREAL = selected_real_kind(15,307)
       REAL(RFREAL), INTENT(IN) :: xs,xmid
       REAL(RFREAL), INTENT(OUT) :: phi
     END SUBROUTINE CurtainProfile
@@ -133,7 +133,8 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
   TYPE(t_global), POINTER :: global
   TYPE(t_grid),   POINTER :: pGrid
   TYPE(t_plag),   POINTER :: pPlag
-  REAL(RFREAL) :: x,y,xMinCell,xMaxCell,yMinCell ,yMaxCell,xMin,xMax,xMid
+  REAL(RFREAL) :: x,y,xMinCell,xMaxCell,yMinCell,yMaxCell,dev
+  REAL(RFREAL) :: xMin,xMax,xmid,phi
 !=============================================================================  
 ! ******************************************************************************
 ! Start
@@ -197,10 +198,9 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
   v = pRegion%plagInput%iniRandVMin
   w = pRegion%plagInput%iniRandWMin
   T = pRegion%plagInput%iniRandTempMin
- 
   xMin = pRegion%plagInput%iniRandXMin
   xMax = pRegion%plagInput%iniRandXMax
-
+  
   meanDia = pRegion%plagInput%iniRandDiamMin
   meanVfrac = pRegion%plagInput%iniRandSpLoadMin
 
@@ -209,7 +209,8 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
 
   pPlag%nPcls = 0
   tol = 1.0E-14_RFREAL
-
+  xmid = 0.5_RFREAL*(xMin+xMax)
+ 
 ! ******************************************************************************
 ! Sum up the number of particles in the all other regions except the current one
 ! to assign proper global initial PCL_ID.
@@ -276,7 +277,7 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
           foundFlag = .TRUE.
 
           dia = meanDia !+ Rand1Normal(meanDia,stdDev) ! Add stdDev later
-          volPcl = global%pi*dia**3.0_RFREAL/6.0_RFREAL
+          volPcl = global%pi*dia**3/6.0_RFREAL
 ! ******************************************************************************
 ! Compute mass of each particle and initialize each particle with x,y and z
 ! momentum in addition to total energy
@@ -295,9 +296,9 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
           pCv(CV_PLAG_ZMOM,iPcl) = massSum*w
           pCv(CV_PLAG_ENER,iPcl) = heatCapSum*T + &
                                    massSum*0.5_RFREAL* &
-                                      ((massSumR*pCv(CV_PLAG_XMOM,iPcl))**2.0_RFREAL+ &
-                                       (massSumR*pCv(CV_PLAG_YMOM,iPcl))**2.0_RFREAL+ &
-                                       (massSumR*pCv(CV_PLAG_ZMOM,iPcl))**2.0_RFREAL)
+                                      ((massSumR*pCv(CV_PLAG_XMOM,iPcl))**2+ &
+                                       (massSumR*pCv(CV_PLAG_YMOM,iPcl))**2+ &
+                                       (massSumR*pCv(CV_PLAG_ZMOM,iPcl))**2)
           volPclsSum = volPclsSum + volPcl
 
           iPcl = iPcl + 1
@@ -317,14 +318,26 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
 ! Compute superparticle loading : spLoad for all particles within a given cell
 ! is taken to be the same
 ! ******************************************************************************
-
-      vFrac = meanVfrac !+ Rand1Normal(meanVolFrac,stdDev) ! Add stdDev later
+     IF (pRegion%mixtInput%prepIntVal2 == 1) THEN
+      dev = pRegion%mixtInput%prepRealVal12 ! Wave no in theta
+      vFrac = Rand1Normal(meanVFrac,dev,pRegion%randData) ! Add stdDev late
+     ELSE IF (pRegion%mixtInput%prepIntVal2 == 2) THEN
+      IF ((x .GE. xMin) .AND. (x .LE. xMax)) THEN
+!       write(198,*) meanVfrac
+       CALL CurtainProfile(x*1000.0_RFREAL,xmid*1000.0_RFREAL,phi)
+       vFrac = meanVfrac*phi
+!       write(199,*) vFrac
+      END IF ! x .GE. xMin
+     ELSE
+!      vFrac = 0.25_RFREAL*( (DTANH(k*( (x-b)+1.0_RFREAL))+1.0_RFREAL)* &
+!                            (DTANH(k*(-(x-b)+1.0_RFREAL))+1.0_RFREAL) )
+      vFrac = meanVFrac !*vFrac !Rand1Normal(meanVFrac,dev,pRegion%randData) ! Add stdDev late
+     END IF
 !      gaussAmp = pRegion%mixtInput%prepRealVal5
 !      m = pRegion%mixtInput%prepIntVal1 ! Wave no in theta
 !      n = pRegion%mixtInput%prepIntVal2 ! Wave number in z
 !      perturb = gaussAmp*DCOS(m*the)
 !      vFrac = meanVfrac*(1.0_RFREAL+perturb)
-!      IF ((x .GE. xMin) .AND. (x .LE. xMax)) THEN
 
       spLoad = vFrac * pGrid%vol(icl)/volPclsSum
       DO iPcl = nPclsBeg,nPclsEnd
@@ -367,15 +380,16 @@ SUBROUTINE PLAG_RFLU_InitSolutionShktb(pRegion,nPclsSumReg)
 END SUBROUTINE PLAG_RFLU_InitSolutionShktb 
 
 SUBROUTINE CurtainProfile(xs,xmid,phi)
-  
+
   IMPLICIT NONE
-  
-  REAL(RFREAL) :: CurtainProfile
+
+  INTEGER, PARAMETER :: RFREAL = selected_real_kind(15,307)
+
   REAL(RFREAL), INTENT(IN) :: xs,xmid
   REAL(RFREAL), INTENT(OUT) :: phi
 
   INTEGER :: i
-  REAL(REREAL) :: centers(14),theta(14),betas(14),sqrdDist(14),phis(14), &
+  REAL(RFREAL) :: centers(14),theta(14),betas(14),sqrdDists(14),phis(14), &
                   iden(14)
   REAL(RFREAL) :: sigma,beta
 
@@ -385,25 +399,25 @@ SUBROUTINE CurtainProfile(xs,xmid,phi)
                -22973.34, -22973.34, 45596.39, -26162.70, 10307.40, -8530.24, &
                 2440.96, -695.00 /
   DO i = 1,14
-    sqrdDist(i) = 0.0_RFREAL
+    sqrdDists(i) = 0.0_RFREAL
     phis(i) = 0.0_RFREAL
     iden(i) = 1.0_RFREAL
   END DO
 
-  sigma = 0.65_RFREAL 
-  beta = 1.0_RFREAL/(2.0_RFREAL* sigma**2.0_RFREAL)
-  betas = beta*iden
- 
+  sigma = 0.65_RFREAL
+  beta = 1.0_RFREAL/(2.0_RFREAL* sigma*sigma)
+
   DO i = 1,14
     !sqrdDists(i) = (centers(i)-(xs-xmid)*iden)**2.0
-    sqrdDists(i) = (centers(i)-(xs-xmid))**2.0_RFREAL
+    sqrdDists(i) = (centers(i)-(xs-xmid))**2 !.0_RFREAL
+    !sqrdDists(i) = (centers(i)-xs)**2.0_RFREAL
     phis(i) = EXP(-beta * sqrdDists(i))
   END DO
 
   phis = phis/SUM(phis)
-  phi = MATMUL(TRANSPOSE(theta),phis)
+  phi = DOT_PRODUCT(theta,phis)
 
-END SUBROUTINE CurtainProfile(xs,xmid,phi)
+END SUBROUTINE CurtainProfile
 
 ! ******************************************************************************
 !

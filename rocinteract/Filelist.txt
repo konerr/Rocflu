@@ -35,7 +35,6 @@ ifdef INRT
 		INRT_DefineHeatTransferNonBurn.F90\
 		INRT_DefineScouring.F90\
 		INRT_DetermineTokens.F90\
-		INRT_DiscreteDelta.F90\
 		INRT_FinishMomentumEdge.F90\
 		INRT_Initialize.F90\
 		INRT_PrintMaterialInput.F90\
