@@ -27,6 +27,10 @@ cache:
 #   # - make clean && make RFLU=1 FOLDER=1 SPEC=1 NO_TECPLOT=1
 #   # - make clean && make RFLU=1 FOLDER=1 SPEC=1 INRT=1 PLAG=1 NO_TECPLOT=1
 
+env:
+ global:
+  - MAKEFLAGS='-j 2'
+
 jobs:
  include:
   - stage: 'Build Test'
@@ -42,9 +46,3 @@ jobs:
     name: 'RFLU, PLAG, SPEC, FOLDER, NO_TECPLOT'
     script: make clean && make RFLU=1 FOLDER=1 SPEC=1 PLAG=1 NO_TECPLOT=1
 
-notifications:  
-  email:  
-   recipients:  
-    - rahul.koneru@ufl.edu
-   on_success: always  
-   on_failure: always
