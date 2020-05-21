@@ -20,6 +20,13 @@ cache:
   - openmpi
   - openmpi-2.0.1
 
+jobs:
+        include:
+                - name: 'RFLU NO_TECPLOT
+                  env: TARGET="RFLU=1 NO_TECPLOT=1"'
 #script: ./build.sh
 script: 
- - make clean && make RFLU=1 FOLDER=1 NO_TECPLOT=1
+ - make clean && make $TARGET
+   # - make clean && make RFLU=1 NO_TECPLOT=1
+   # - make clean && make RFLU=1 FOLDER=1 SPEC=1 NO_TECPLOT=1
+   # - make clean && make RFLU=1 FOLDER=1 SPEC=1 INRT=1 PLAG=1 NO_TECPLOT=1
