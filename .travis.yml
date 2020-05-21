@@ -29,10 +29,16 @@ cache:
 
 jobs:
  include:
+         #  - stage: 'Build Test'
+         #    name: 'RFLU, NO_TECPLOT'
+         #    script: make clean && make RFLU=1 NO_TECPLOT=1
   - stage: 'Build Test'
-    name: 'RFLU NO_TECPLOT'
-    script: make clean && make RFLU=1 NO_TECPLOT=1
-  - stage: 'Build Test'
-    name: 'RFLU FOLDER NO_TECPLOT'
+    name: 'RFLU, FOLDER, NO_TECPLOT'
     script: make clean && make RFLU=1 FOLDER=1 NO_TECPLOT=1
+  - stage: 'Build Test'
+    name: 'RFLU, FOLDER, SPEC, NO_TECPLOT'
+    script: make clean && make RFLU=1 FOLDER=1 SPEC=1 NO_TECPLOT=1
+    #  - stage: 'Build Test'
+    #    name: 'RFLU, FOLDER, SPEC, INRT, PLAG, NO_TECPLOT'
+    #    script: make clean && make RFLU=1 FOLDER=1 SPEC=1 INRT=1 PLAG=1 NO_TECPLOT=1
    
