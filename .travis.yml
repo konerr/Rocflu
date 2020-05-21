@@ -45,6 +45,6 @@ jobs:
 notifications:  
   email:  
    recipients:  
-    - rahul9babu@gmail.com
+    - rahul.koneru@ufl.edu
    on_success: always  
    on_failure: always
